@@ -23,10 +23,60 @@ def fetch_soup(url):
         logging.error(f"Failed to fetch {url}: {e}")
         return None
 
-def extract_paper_links(soup, year):
-    """Extracts all paper page links for the given year."""
-    pattern = rf'/smallsat/{year}/all{year}/\d+'
-    return [link.get('href') for link in soup.find_all('a', href=re.compile(pattern))]
+
+def extract_paper_links_with_dates(soup, year):
+    """Extracts all paper page links for the given year, mapping each to its date."""
+    schedule_table = soup.find('table', class_='vcalendar')
+    if not schedule_table:
+        logging.error('No table with class vcalendar found!')
+        # Print all tables for debugging
+        for idx, t in enumerate(soup.find_all('table')):
+            logging.info(f'Table {idx} HTML: {str(t)[:100]}')
+        return {}
+    paper_date_map = {}
+    current_date = None
+    # The logic below persists the last seen date (from a 'day' row)
+    # and assigns it to all subsequent paper links (from 'vevent' rows)
+    skipped_links = []
+    for idx, row in enumerate(schedule_table.find_all('tr')):
+        row_classes = row.get('class', [])
+        logging.info(f"Row {idx} classes: {row_classes}, HTML: {str(row)[:100]}")
+        # Use substring matching for robustness
+        if any('day' in c for c in row_classes):
+            date_text = row.get_text(strip=True)
+            import datetime
+            try:
+                import re
+                date_parts = date_text.split(', ')
+                if len(date_parts) == 2:
+                    # Use regex to extract month and day robustly
+                    match = re.search(r'(\w+)\s+(\d+)', date_parts[1])
+                    if match:
+                        month = match.group(1)
+                        day = int(match.group(2))
+                        month_num = datetime.datetime.strptime(month, '%B').month
+                        current_date = f"{year}{month_num:02d}{day:02d}"
+                        logging.info(f"Set current_date: {current_date} for day row: {date_text}")
+                    else:
+                        logging.warning(f"Regex failed to parse month/day from: {date_parts[1]}")
+                else:
+                    logging.warning(f"Could not parse date from day row: {date_text}")
+            except Exception as e:
+                logging.warning(f"Exception parsing date from day row: {date_text}, error: {e}")
+        elif any('vevent' in c for c in row_classes):
+            link_tag = row.find('a', href=re.compile(rf'/smallsat/{year}/all{year}/\d+'))
+            if link_tag:
+                paper_link = link_tag.get('href')
+                if current_date:
+                    paper_date_map[paper_link] = current_date
+                    logging.info(f"Assigned date {current_date} to paper link {paper_link}")
+                else:
+                    skipped_links.append(paper_link)
+                    logging.info(f"Skipping paper link {paper_link} because no current_date has been set yet.")
+    logging.info(f"Total papers mapped to dates: {len(paper_date_map)}")
+    if skipped_links:
+        logging.warning(f"Skipped {len(skipped_links)} paper links due to missing date: {skipped_links}")
+    return paper_date_map
 
 def get_article_title(soup):
     """Extracts the article title from the page's <title> tag."""
@@ -62,22 +112,25 @@ def download_pdf(url, output_path, max_retries=5):
     return False
 
 
-def main(year=2025, output_dir='D:/SSC2025/', debug_flag=True):
+
+def main(year=2025, debug_flag=True):
     setup_logging()
     base_url = f"https://digitalcommons.usu.edu/smallsat/{year}/all{year}/"
     logging.info(f"Fetching main page: {base_url}")
     soup = fetch_soup(base_url)
     if not soup:
         return
+    # Use a local output folder within the working directory
+    output_dir = os.path.join(os.getcwd(), str(year))
+    os.makedirs(output_dir, exist_ok=True)
     if debug_flag:
-        with open("soup_debug.html", "w", encoding="utf-8") as f:
+        with open(os.path.join(output_dir, "soup_debug.html"), "w", encoding="utf-8") as f:
             f.write(str(soup))
-    paper_links = extract_paper_links(soup, year)
-    if not paper_links:
+    paper_date_map = extract_paper_links_with_dates(soup, year)
+    if not paper_date_map:
         logging.warning("No paper links found.")
         return
-    os.makedirs(output_dir, exist_ok=True)
-    for rel_link in paper_links:
+    for rel_link, paper_date in paper_date_map.items():
         full_link = f"https://digitalcommons.usu.edu{rel_link}" if rel_link.startswith('/') else rel_link
         logging.info(f"Fetching paper page: {full_link}")
         soup_temp = fetch_soup(full_link)
@@ -92,9 +145,10 @@ def main(year=2025, output_dir='D:/SSC2025/', debug_flag=True):
         if not pdf_url:
             logging.warning(f"PDF link not found for {article_title}")
             continue
-        pdf_path = os.path.join(output_dir, f"{article_title}.pdf")
+        pdf_filename = f"{paper_date}_{article_title}.pdf"
+        pdf_path = os.path.join(output_dir, pdf_filename)
         download_pdf(pdf_url, pdf_path)
 
 if __name__ == "__main__":
     # Set debug_flag to True to save HTML files, False to skip
-    main(year=2025, output_dir='D:/SSC2025/', debug_flag=True)
+    main(year=2025, debug_flag=True)
