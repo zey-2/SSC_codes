@@ -2,7 +2,7 @@
 
 This Python script downloads Small Satellite Conference papers and extracts metadata (title, date, abstract) into an Excel file.
 
-You can optionally use a test mode to download only three papers for quick testing.
+You can optionally use a test mode to download only three papers for quick testing. Debug output and saving HTML files are now controlled by the logging level (set log_level to logging.DEBUG).
 
 ## Features
 
@@ -38,17 +38,24 @@ You can optionally use a test mode to download only three papers for quick testi
 You can customize the script by changing the following arguments in the `main()` function call at the bottom of the script:
 
 - `year`: The conference year to scrape (default: 2025)
-- `debug_flag`: If True, saves HTML debug files for each page (default: False)
 - `test_flag`: If True, downloads only three papers for quick testing (default: False)
 - `log_level`: Sets the logging level (default: `logging.INFO`). Accepts standard Python logging levels such as `logging.DEBUG`, `logging.INFO`, `logging.WARNING`, etc.
 
-### Example: Set logging level to DEBUG
+### Example: Enable debug output and save HTML files
 
 ```python
-main(year=2025, debug_flag=False, test_flag=False, log_level=logging.DEBUG)
+main(year=2025, test_flag=False, log_level=logging.DEBUG)
 ```
 
-This will enable more verbose logging output for debugging purposes.
+Setting `log_level=logging.DEBUG` enables verbose logging and saves HTML debug files for each page.
+
+### Example: Use warning-level logging and progress bar
+
+```python
+main(year=2025, test_flag=False, log_level=logging.WARNING)
+```
+
+Setting `log_level=logging.WARNING` will show only warnings and errors, and display a progress bar during downloads.
 
 ## License
 

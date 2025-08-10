@@ -114,7 +114,7 @@ def download_pdf(url, output_path, max_retries=5):
 
 
 
-def main(year=2025, debug_flag=True, test_flag=False, log_level=logging.INFO):
+def main(year=2025, test_flag=False, log_level=logging.INFO):
     setup_logging(log_level)
     base_url = f"https://digitalcommons.usu.edu/smallsat/{year}/all{year}/"
     logging.info(f"Fetching main page: {base_url}")
@@ -124,7 +124,7 @@ def main(year=2025, debug_flag=True, test_flag=False, log_level=logging.INFO):
     # Use a local output folder within the working directory
     output_dir = os.path.join(os.getcwd(), str(year))
     os.makedirs(output_dir, exist_ok=True)
-    if debug_flag:
+    if log_level == logging.DEBUG:
         with open(os.path.join(output_dir, "soup_debug.html"), "w", encoding="utf-8") as f:
             f.write(str(soup))
     paper_date_map = extract_paper_links_with_dates(soup, year)
@@ -167,7 +167,7 @@ def main(year=2025, debug_flag=True, test_flag=False, log_level=logging.INFO):
             'Date': paper_date,
             'Abstract': abstract
         })
-        if debug_flag:
+        if log_level == logging.DEBUG:
             debug_html_path = os.path.join(output_dir, f"soup_debug_{article_title}.html")
             with open(debug_html_path, "w", encoding="utf-8") as f_debug:
                 f_debug.write(str(soup_temp))
@@ -194,7 +194,6 @@ def main(year=2025, debug_flag=True, test_flag=False, log_level=logging.INFO):
         logging.error(f"Failed to save Excel file: {e}")
 
 if __name__ == "__main__":
-    # Set debug_flag to True to save HTML files, False to skip
     # Set test_flag to True to only download three papers and exit
-    # You can set log_level to logging.DEBUG, logging.INFO, etc.
-    main(year=2025, debug_flag=False, test_flag=False, log_level=logging.WARNING)
+    # Set log_level to logging.DEBUG to enable debug output and save HTML files
+    main(year=2025, test_flag=False, log_level=logging.WARNING)
