@@ -24,6 +24,10 @@ You can optionally use a test mode to download only three papers for quick testi
    - By default, downloads all 2025 papers and saves results in the `2025/` folder.
    - To quickly test, set `test_flag=True` in the `main()` function call at the bottom of the script. This will download only three papers and exit early.
 
+## Resume Capability
+
+If the Excel file (`papers_2025.xlsx`) already exists, the script will automatically skip papers that have already been processed and listed in the file. PDF downloads will also be skipped for papers whose files already exist in the output directory. This allows you to safely rerun the script to continue interrupted downloads or add new papers as they appear.
+
 ## Output
 
 - PDFs and debug HTML files are saved in the output directory (e.g., `2025/`)
@@ -41,6 +45,8 @@ You can customize the script by changing the following arguments in the `main()`
 - `test_flag`: If True, downloads only three papers for quick testing (default: False)
 - `log_level`: Sets the logging level (default: `logging.INFO`). Accepts standard Python logging levels such as `logging.DEBUG`, `logging.INFO`, `logging.WARNING`, etc.
 - `download_flag`: If True, downloads PDF files for each paper (default: True). If False, skips PDF downloads and only collects metadata.
+
+**Note:** The script will automatically skip papers and PDFs that have already been processed, based on the Excel file and existing PDF files.
 
 ### Example: Enable debug output and save HTML files
 

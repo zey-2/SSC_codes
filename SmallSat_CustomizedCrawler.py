@@ -140,12 +140,28 @@ def main(year=2025, test_flag=False, log_level=logging.INFO, download_flag=True)
         logging.warning("No paper links found.")
         return
     # Prepare to collect data for Excel
+    import pandas as pd
+    excel_path = os.path.join(output_dir, f"papers_{year}.xlsx")
     papers_info = []
+    processed_links = set()
+    # If Excel file exists, read it and collect processed links
+    if os.path.exists(excel_path):
+        try:
+            df_existing = pd.read_excel(excel_path)
+            if 'Link' in df_existing.columns:
+                processed_links = set(df_existing['Link'].astype(str))
+                papers_info = df_existing.to_dict(orient='records')
+            logging.info(f"Loaded {len(processed_links)} already processed papers from Excel.")
+        except Exception as e:
+            logging.error(f"Failed to read existing Excel file: {e}")
     count = 0
     paper_iter = paper_date_map.items()
     if log_level == logging.WARNING:
         paper_iter = tqdm(paper_iter, desc="Downloading papers", total=len(paper_date_map))
     for rel_link, paper_date in paper_iter:
+        if rel_link in processed_links:
+            logging.info(f"Skipping already processed paper: {rel_link}")
+            continue
         full_link = f"https://digitalcommons.usu.edu{rel_link}" if rel_link.startswith('/') else rel_link
         logging.info(f"Fetching paper page: {full_link}")
         soup_temp = fetch_soup(full_link)
@@ -176,6 +192,7 @@ def main(year=2025, test_flag=False, log_level=logging.INFO, download_flag=True)
             'Abstract': abstract,
             'Link': rel_link
         })
+        processed_links.add(rel_link)
         if log_level == logging.DEBUG:
             debug_html_path = os.path.join(output_dir, f"soup_debug_{article_title}.html")
             with open(debug_html_path, "w", encoding="utf-8") as f_debug:
@@ -187,13 +204,14 @@ def main(year=2025, test_flag=False, log_level=logging.INFO, download_flag=True)
         pdf_filename = f"{paper_date}_{article_title}.pdf"
         pdf_path = os.path.join(output_dir, pdf_filename)
         if download_flag:
-            download_pdf(pdf_url, pdf_path)
+            if not os.path.exists(pdf_path):
+                download_pdf(pdf_url, pdf_path)
+            else:
+                logging.info(f"PDF already exists, skipping download: {pdf_filename}")
         count += 1
         # Write Excel after each paper
         try:
-            import pandas as pd
             df = pd.DataFrame(papers_info)
-            excel_path = os.path.join(output_dir, f"papers_{year}.xlsx")
             df.to_excel(excel_path, index=False)
             logging.info(f"Updated paper info to Excel: {excel_path}")
         except Exception as e:
