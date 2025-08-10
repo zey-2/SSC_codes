@@ -113,7 +113,7 @@ def download_pdf(url, output_path, max_retries=5):
 
 
 
-def main(year=2025, debug_flag=True):
+def main(year=2025, debug_flag=True, test_flag=False):
     setup_logging()
     base_url = f"https://digitalcommons.usu.edu/smallsat/{year}/all{year}/"
     logging.info(f"Fetching main page: {base_url}")
@@ -130,6 +130,9 @@ def main(year=2025, debug_flag=True):
     if not paper_date_map:
         logging.warning("No paper links found.")
         return
+    # Prepare to collect data for Excel
+    papers_info = []
+    count = 0
     for rel_link, paper_date in paper_date_map.items():
         full_link = f"https://digitalcommons.usu.edu{rel_link}" if rel_link.startswith('/') else rel_link
         logging.info(f"Fetching paper page: {full_link}")
@@ -137,6 +140,28 @@ def main(year=2025, debug_flag=True):
         if not soup_temp:
             continue
         article_title = get_article_title(soup_temp)
+        # Extract abstract
+        abstract = ""
+        abstract_tag = soup_temp.find('div', id='abstract')
+        if abstract_tag:
+            abstract_p = abstract_tag.find('p')
+            if abstract_p and hasattr(abstract_p, 'get_text'):
+                abstract = abstract_p.get_text(strip=True)
+            elif hasattr(abstract_tag, 'get_text'):
+                abstract = abstract_tag.get_text(strip=True)
+        else:
+            # Fallback: try meta tag
+            meta_abstract = soup_temp.find('meta', attrs={'name': 'description'})
+            from bs4.element import Tag
+            if isinstance(meta_abstract, Tag):
+                content = meta_abstract.get('content', None)
+                if content:
+                    abstract = content
+        papers_info.append({
+            'Title': article_title,
+            'Date': paper_date,
+            'Abstract': abstract
+        })
         if debug_flag:
             debug_html_path = os.path.join(output_dir, f"soup_debug_{article_title}.html")
             with open(debug_html_path, "w", encoding="utf-8") as f_debug:
@@ -148,7 +173,22 @@ def main(year=2025, debug_flag=True):
         pdf_filename = f"{paper_date}_{article_title}.pdf"
         pdf_path = os.path.join(output_dir, pdf_filename)
         download_pdf(pdf_url, pdf_path)
+        count += 1
+        if test_flag and count >= 3:
+            logging.info("Test flag set: downloaded three papers, exiting early.")
+            break
+
+    # Save to Excel
+    try:
+        import pandas as pd
+        df = pd.DataFrame(papers_info)
+        excel_path = os.path.join(output_dir, f"papers_{year}.xlsx")
+        df.to_excel(excel_path, index=False)
+        logging.info(f"Saved paper info to Excel: {excel_path}")
+    except Exception as e:
+        logging.error(f"Failed to save Excel file: {e}")
 
 if __name__ == "__main__":
     # Set debug_flag to True to save HTML files, False to skip
-    main(year=2025, debug_flag=True)
+    # Set test_flag to True to only download three papers and exit
+    main(year=2025, debug_flag=True, test_flag=True)

@@ -1,0 +1,31 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Windows system files
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Logs
+*.log
+
+# Excel files
+*.xlsx
+
+# PDF files
+*.pdf
+
+# HTML debug files
+*.html
+
+# Other temp files
+*.tmp
+
+# Ignore requirements.txt backup
+requirements*.bak
