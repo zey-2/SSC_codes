@@ -179,19 +179,20 @@ def main(year=2025, test_flag=False, log_level=logging.INFO):
         pdf_path = os.path.join(output_dir, pdf_filename)
         download_pdf(pdf_url, pdf_path)
         count += 1
+        # Write Excel after each paper
+        try:
+            import pandas as pd
+            df = pd.DataFrame(papers_info)
+            excel_path = os.path.join(output_dir, f"papers_{year}.xlsx")
+            df.to_excel(excel_path, index=False)
+            logging.info(f"Updated paper info to Excel: {excel_path}")
+        except Exception as e:
+            logging.error(f"Failed to update Excel file: {e}")
         if test_flag and count >= 3:
             logging.info("Test flag set: downloaded three papers, exiting early.")
             break
 
-    # Save to Excel
-    try:
-        import pandas as pd
-        df = pd.DataFrame(papers_info)
-        excel_path = os.path.join(output_dir, f"papers_{year}.xlsx")
-        df.to_excel(excel_path, index=False)
-        logging.info(f"Saved paper info to Excel: {excel_path}")
-    except Exception as e:
-        logging.error(f"Failed to save Excel file: {e}")
+    # Excel writing now happens after each paper download
 
 if __name__ == "__main__":
     # Set test_flag to True to only download three papers and exit

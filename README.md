@@ -56,7 +56,3 @@ main(year=2025, test_flag=False, log_level=logging.WARNING)
 ```
 
 Setting `log_level=logging.WARNING` will show only warnings and errors, and display a progress bar during downloads.
-
-## License
-
-This project is for educational and research use only.
