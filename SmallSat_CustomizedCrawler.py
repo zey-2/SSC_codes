@@ -6,6 +6,7 @@ import time
 import logging
 import requests
 from bs4 import BeautifulSoup
+from tqdm import tqdm
 
 def setup_logging(log_level=logging.INFO):
     logging.basicConfig(
@@ -133,7 +134,10 @@ def main(year=2025, debug_flag=True, test_flag=False, log_level=logging.INFO):
     # Prepare to collect data for Excel
     papers_info = []
     count = 0
-    for rel_link, paper_date in paper_date_map.items():
+    paper_iter = paper_date_map.items()
+    if log_level == logging.WARNING:
+        paper_iter = tqdm(paper_iter, desc="Downloading papers", total=len(paper_date_map))
+    for rel_link, paper_date in paper_iter:
         full_link = f"https://digitalcommons.usu.edu{rel_link}" if rel_link.startswith('/') else rel_link
         logging.info(f"Fetching paper page: {full_link}")
         soup_temp = fetch_soup(full_link)
@@ -145,9 +149,10 @@ def main(year=2025, debug_flag=True, test_flag=False, log_level=logging.INFO):
         abstract_tag = soup_temp.find('div', id='abstract')
         if abstract_tag:
             abstract_p = abstract_tag.find('p')
-            if abstract_p and hasattr(abstract_p, 'get_text'):
+            from bs4.element import Tag
+            if isinstance(abstract_p, Tag):
                 abstract = abstract_p.get_text(strip=True)
-            elif hasattr(abstract_tag, 'get_text'):
+            elif isinstance(abstract_tag, Tag):
                 abstract = abstract_tag.get_text(strip=True)
         else:
             # Fallback: try meta tag
