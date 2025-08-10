@@ -7,9 +7,9 @@ import logging
 import requests
 from bs4 import BeautifulSoup
 
-def setup_logging():
+def setup_logging(log_level=logging.INFO):
     logging.basicConfig(
-        level=logging.INFO,
+        level=log_level,
         format='%(asctime)s - %(levelname)s - %(message)s'
     )
 
@@ -113,8 +113,8 @@ def download_pdf(url, output_path, max_retries=5):
 
 
 
-def main(year=2025, debug_flag=True, test_flag=False):
-    setup_logging()
+def main(year=2025, debug_flag=True, test_flag=False, log_level=logging.INFO):
+    setup_logging(log_level)
     base_url = f"https://digitalcommons.usu.edu/smallsat/{year}/all{year}/"
     logging.info(f"Fetching main page: {base_url}")
     soup = fetch_soup(base_url)
@@ -191,4 +191,5 @@ def main(year=2025, debug_flag=True, test_flag=False):
 if __name__ == "__main__":
     # Set debug_flag to True to save HTML files, False to skip
     # Set test_flag to True to only download three papers and exit
-    main(year=2025, debug_flag=True, test_flag=True)
+    # You can set log_level to logging.DEBUG, logging.INFO, etc.
+    main(year=2025, debug_flag=False, test_flag=False, log_level=logging.WARNING)

@@ -35,7 +35,20 @@ You can optionally use a test mode to download only three papers for quick testi
 
 ## Customization
 
-- Change the `year`, `debug_flag`, or `test_flag` in the `main()` function call at the bottom of the script to control behavior.
+You can customize the script by changing the following arguments in the `main()` function call at the bottom of the script:
+
+- `year`: The conference year to scrape (default: 2025)
+- `debug_flag`: If True, saves HTML debug files for each page (default: False)
+- `test_flag`: If True, downloads only three papers for quick testing (default: False)
+- `log_level`: Sets the logging level (default: `logging.INFO`). Accepts standard Python logging levels such as `logging.DEBUG`, `logging.INFO`, `logging.WARNING`, etc.
+
+### Example: Set logging level to DEBUG
+
+```python
+main(year=2025, debug_flag=False, test_flag=False, log_level=logging.DEBUG)
+```
+
+This will enable more verbose logging output for debugging purposes.
 
 ## License
 
