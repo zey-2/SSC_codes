@@ -114,7 +114,15 @@ def download_pdf(url, output_path, max_retries=5):
 
 
 
-def main(year=2025, test_flag=False, log_level=logging.INFO):
+def main(year=2025, test_flag=False, log_level=logging.INFO, download_flag=True):
+    """
+    Downloads SmallSat papers and metadata for a given year.
+    Args:
+        year (int): Conference year to scrape.
+        test_flag (bool): If True, only download/process three papers.
+        log_level: Python logging level.
+        download_flag (bool): If True, download PDF files; if False, skip PDF download.
+    """
     setup_logging(log_level)
     base_url = f"https://digitalcommons.usu.edu/smallsat/{year}/all{year}/"
     logging.info(f"Fetching main page: {base_url}")
@@ -178,7 +186,8 @@ def main(year=2025, test_flag=False, log_level=logging.INFO):
             continue
         pdf_filename = f"{paper_date}_{article_title}.pdf"
         pdf_path = os.path.join(output_dir, pdf_filename)
-        download_pdf(pdf_url, pdf_path)
+        if download_flag:
+            download_pdf(pdf_url, pdf_path)
         count += 1
         # Write Excel after each paper
         try:
@@ -198,4 +207,5 @@ def main(year=2025, test_flag=False, log_level=logging.INFO):
 if __name__ == "__main__":
     # Set test_flag to True to only download three papers and exit
     # Set log_level to logging.DEBUG to enable debug output and save HTML files
-    main(year=2025, test_flag=False, log_level=logging.WARNING)
+    # Set download_flag to False to skip PDF downloads
+    main(year=2025, test_flag=False, log_level=logging.WARNING, download_flag=True)

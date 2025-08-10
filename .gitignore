@@ -15,8 +15,11 @@ $RECYCLE.BIN/
 # Logs
 *.log
 
+
 # Excel files
 *.xlsx
+# CSV files
+*.csv
 
 # PDF files
 *.pdf

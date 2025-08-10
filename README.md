@@ -40,6 +40,7 @@ You can customize the script by changing the following arguments in the `main()`
 - `year`: The conference year to scrape (default: 2025)
 - `test_flag`: If True, downloads only three papers for quick testing (default: False)
 - `log_level`: Sets the logging level (default: `logging.INFO`). Accepts standard Python logging levels such as `logging.DEBUG`, `logging.INFO`, `logging.WARNING`, etc.
+- `download_flag`: If True, downloads PDF files for each paper (default: True). If False, skips PDF downloads and only collects metadata.
 
 ### Example: Enable debug output and save HTML files
 
@@ -56,3 +57,11 @@ main(year=2025, test_flag=False, log_level=logging.WARNING)
 ```
 
 Setting `log_level=logging.WARNING` will show only warnings and errors, and display a progress bar during downloads.
+
+### Example: Skip PDF downloads and only collect metadata
+
+```python
+main(year=2025, test_flag=False, log_level=logging.INFO, download_flag=False)
+```
+
+Setting `download_flag=False` will skip downloading PDF files and only update the Excel file with metadata for each paper.
