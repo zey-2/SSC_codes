@@ -165,7 +165,8 @@ def main(year=2025, test_flag=False, log_level=logging.INFO):
         papers_info.append({
             'Title': article_title,
             'Date': paper_date,
-            'Abstract': abstract
+            'Abstract': abstract,
+            'Link': rel_link
         })
         if log_level == logging.DEBUG:
             debug_html_path = os.path.join(output_dir, f"soup_debug_{article_title}.html")
